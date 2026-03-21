@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface ProxyKey {
   key: string;
   type: 'Normal' | 'Premium';
@@ -19,88 +21,106 @@ export interface ActiveUser {
   blocked: boolean;
 }
 
-const KEYS_STORAGE = 'proxy_keys';
-const USERS_STORAGE = 'proxy_active_users';
-
-export function getKeys(): ProxyKey[] {
-  const raw = localStorage.getItem(KEYS_STORAGE);
-  if (!raw) return [];
-  const keys: ProxyKey[] = JSON.parse(raw);
-  const now = new Date();
-  return keys.map(k => {
-    if (k.status === 'Usada' && k.expiresAt && new Date(k.expiresAt) < now) {
-      return { ...k, status: 'Expirada' as const };
-    }
-    return k;
-  });
-}
-
-export function saveKeys(keys: ProxyKey[]) {
-  localStorage.setItem(KEYS_STORAGE, JSON.stringify(keys));
-}
-
-export function getActiveUsers(): ActiveUser[] {
-  const raw = localStorage.getItem(USERS_STORAGE);
-  if (!raw) return [];
-  return JSON.parse(raw);
-}
-
-export function saveActiveUsers(users: ActiveUser[]) {
-  localStorage.setItem(USERS_STORAGE, JSON.stringify(users));
-}
-
-export function registerActiveUser(name: string, key: string, type: string, expiresAt: string) {
-  const users = getActiveUsers();
-  const existing = users.findIndex(u => u.key === key);
-  if (existing !== -1) {
-    users[existing] = { ...users[existing], name, loginAt: new Date().toISOString(), expiresAt };
-  } else {
-    users.push({ name, key, type, loginAt: new Date().toISOString(), expiresAt, blocked: false });
+// Convert DB row to ProxyKey
+function rowToKey(row: any): ProxyKey {
+  const k: ProxyKey = {
+    key: row.key,
+    type: row.type as ProxyKey['type'],
+    status: row.status as ProxyKey['status'],
+    duration: row.duration,
+    durationMs: row.duration_ms,
+    createdAt: row.created_at,
+    usedBy: row.used_by ?? undefined,
+    activatedAt: row.activated_at ?? undefined,
+    expiresAt: row.expires_at ?? undefined,
+  };
+  // Auto-expire
+  if (k.status === 'Usada' && k.expiresAt && new Date(k.expiresAt) < new Date()) {
+    k.status = 'Expirada';
   }
-  saveActiveUsers(users);
+  return k;
 }
 
-export function blockUser(key: string) {
-  const users = getActiveUsers();
-  const idx = users.findIndex(u => u.key === key);
-  if (idx !== -1) users[idx].blocked = true;
-  saveActiveUsers(users);
+function rowToUser(row: any): ActiveUser {
+  return {
+    name: row.name,
+    key: row.key,
+    type: row.type,
+    loginAt: row.login_at,
+    expiresAt: row.expires_at ?? '',
+    blocked: row.blocked,
+  };
 }
 
-export function unblockUser(key: string) {
-  const users = getActiveUsers();
-  const idx = users.findIndex(u => u.key === key);
-  if (idx !== -1) users[idx].blocked = false;
-  saveActiveUsers(users);
+export async function getKeys(): Promise<ProxyKey[]> {
+  const { data, error } = await supabase.from('proxy_keys').select('*').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data.map(rowToKey);
 }
 
-export function kickUser(key: string) {
-  const users = getActiveUsers().filter(u => u.key !== key);
-  saveActiveUsers(users);
+export async function saveKey(k: ProxyKey): Promise<void> {
+  await supabase.from('proxy_keys').upsert({
+    key: k.key,
+    type: k.type,
+    status: k.status,
+    duration: k.duration,
+    duration_ms: k.durationMs,
+    created_at: k.createdAt,
+    used_by: k.usedBy ?? null,
+    activated_at: k.activatedAt ?? null,
+    expires_at: k.expiresAt ?? null,
+  }, { onConflict: 'key' });
 }
 
-export function deleteUser(key: string) {
-  kickUser(key);
-  const keys = getKeys().filter(k => k.key !== key);
-  saveKeys(keys);
+export async function getActiveUsers(): Promise<ActiveUser[]> {
+  const { data, error } = await supabase.from('active_users').select('*').order('login_at', { ascending: false });
+  if (error || !data) return [];
+  return data.map(rowToUser);
 }
 
-export function reduceKeyTime(key: string, reduceMs: number) {
-  const keys = getKeys();
-  const idx = keys.findIndex(k => k.key === key);
-  if (idx !== -1 && keys[idx].expiresAt) {
-    const newExpiry = new Date(new Date(keys[idx].expiresAt!).getTime() - reduceMs);
-    keys[idx].expiresAt = newExpiry.toISOString();
-    if (newExpiry < new Date()) keys[idx].status = 'Expirada';
-  }
-  saveKeys(keys);
+export async function registerActiveUser(name: string, key: string, type: string, expiresAt: string) {
+  await supabase.from('active_users').upsert({
+    name,
+    key,
+    type,
+    login_at: new Date().toISOString(),
+    expires_at: expiresAt || null,
+    blocked: false,
+  }, { onConflict: 'key' });
 }
 
-export function isUserBlocked(key: string): boolean {
-  const users = getActiveUsers();
+export async function blockUser(key: string) {
+  await supabase.from('active_users').update({ blocked: true }).eq('key', key);
+}
+
+export async function unblockUser(key: string) {
+  await supabase.from('active_users').update({ blocked: false }).eq('key', key);
+}
+
+export async function kickUser(key: string) {
+  await supabase.from('active_users').delete().eq('key', key);
+}
+
+export async function deleteUser(key: string) {
+  await supabase.from('active_users').delete().eq('key', key);
+  await supabase.from('proxy_keys').delete().eq('key', key);
+}
+
+export async function reduceKeyTime(key: string, reduceMs: number) {
+  const { data } = await supabase.from('proxy_keys').select('expires_at, status').eq('key', key).single();
+  if (!data || !data.expires_at) return;
+  const newExpiry = new Date(new Date(data.expires_at).getTime() - reduceMs);
+  const newStatus = newExpiry < new Date() ? 'Expirada' : data.status;
+  await supabase.from('proxy_keys').update({
+    expires_at: newExpiry.toISOString(),
+    status: newStatus,
+  }).eq('key', key);
+}
+
+export async function isUserBlocked(key: string): Promise<boolean> {
   const clean = key.trim().toUpperCase();
-  const user = users.find(u => u.key.trim().toUpperCase() === clean);
-  return user?.blocked ?? false;
+  const { data } = await supabase.from('active_users').select('blocked').ilike('key', clean).single();
+  return data?.blocked ?? false;
 }
 
 export function generateKey(): string {
@@ -109,7 +129,7 @@ export function generateKey(): string {
   return `PROXY-${segment()}-${segment()}`;
 }
 
-export function generateKeys(count: number, type: ProxyKey['type'], duration: string): ProxyKey[] {
+export async function generateKeys(count: number, type: ProxyKey['type'], duration: string): Promise<ProxyKey[]> {
   const durationMap: Record<string, number> = {
     '1 minuto': 60 * 1000,
     '1 día': 24 * 60 * 60 * 1000,
@@ -118,39 +138,67 @@ export function generateKeys(count: number, type: ProxyKey['type'], duration: st
   };
 
   const newKeys: ProxyKey[] = [];
+  const rows: any[] = [];
   for (let i = 0; i < count; i++) {
-    newKeys.push({
+    const k: ProxyKey = {
       key: generateKey(),
       type,
       status: 'Activa',
       duration,
       durationMs: durationMap[duration] || 0,
       createdAt: new Date().toISOString(),
+    };
+    newKeys.push(k);
+    rows.push({
+      key: k.key,
+      type: k.type,
+      status: k.status,
+      duration: k.duration,
+      duration_ms: k.durationMs,
+      created_at: k.createdAt,
     });
   }
+  await supabase.from('proxy_keys').insert(rows);
   return newKeys;
 }
 
-export function validateKey(inputKey: string): ProxyKey | null {
-  const keys = getKeys();
+export async function validateKey(inputKey: string): Promise<ProxyKey | null> {
   const clean = inputKey.trim().toUpperCase();
-  return keys.find(k => k.key.trim().toUpperCase() === clean && k.status === 'Activa') || null;
+  const { data } = await supabase.from('proxy_keys').select('*').ilike('key', clean).eq('status', 'Activa').single();
+  if (!data) return null;
+  return rowToKey(data);
 }
 
-export function activateKey(inputKey: string, userName: string): ProxyKey | null {
-  const keys = getKeys();
+export async function activateKey(inputKey: string, userName: string): Promise<ProxyKey | null> {
   const clean = inputKey.trim().toUpperCase();
-  const idx = keys.findIndex(k => k.key.trim().toUpperCase() === clean && k.status === 'Activa');
-  if (idx === -1) return null;
+  const { data } = await supabase.from('proxy_keys').select('*').ilike('key', clean).eq('status', 'Activa').single();
+  if (!data) return null;
 
   const now = new Date();
-  keys[idx] = {
-    ...keys[idx],
+  const expiresAt = new Date(now.getTime() + data.duration_ms).toISOString();
+
+  const { error } = await supabase.from('proxy_keys').update({
     status: 'Usada',
+    used_by: userName,
+    activated_at: now.toISOString(),
+    expires_at: expiresAt,
+  }).eq('key', data.key);
+
+  if (error) return null;
+
+  return {
+    key: data.key,
+    type: data.type as ProxyKey['type'],
+    status: 'Usada',
+    duration: data.duration,
+    durationMs: data.duration_ms,
+    createdAt: data.created_at,
     usedBy: userName,
     activatedAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + keys[idx].durationMs).toISOString(),
+    expiresAt,
   };
-  saveKeys(keys);
-  return keys[idx];
+}
+
+export async function deleteKey(key: string) {
+  await supabase.from('proxy_keys').delete().eq('key', key);
 }
