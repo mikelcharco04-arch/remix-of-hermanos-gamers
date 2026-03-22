@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const Admin = () => {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem("admin_auth") === "true");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"keys" | "users" | "generate" | "stats">("generate");
