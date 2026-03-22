@@ -43,9 +43,15 @@ const Admin = () => {
     e.preventDefault();
     if (password === "117") {
       setAuthenticated(true);
+      sessionStorage.setItem("admin_auth", "true");
     } else {
       setError("Acceso denegado");
     }
+  };
+
+  const handleLogout = () => {
+    setAuthenticated(false);
+    sessionStorage.removeItem("admin_auth");
   };
 
   const handleGenerate = async () => {
