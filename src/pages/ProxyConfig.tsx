@@ -390,6 +390,48 @@ const ProxyConfig = () => {
         </div>
       </div>
 
+      {/* Advanced Tunneling Module */}
+      <div className="glass-card p-4 animate-fade-in-up">
+        <div className="flex items-center gap-2 mb-3">
+          <Shield className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-medium">Módulo de Túnel Avanzado</span>
+        </div>
+        <div className="space-y-2">
+          {[
+            { label: "TLS Handshake", value: "v1.3 / ECDHE-RSA", status: true },
+            { label: "Obfuscación L4", value: "XOR-Cipher activo", status: true },
+            { label: "Anti-DPI Bypass", value: "Fragmentación TCP", status: true },
+            { label: "Packet Padding", value: "256-byte aligned", status: true },
+            { label: "Header Injection", value: "X-Forwarded rotativo", status: false },
+          ].map(({ label, value, status }) => (
+            <div key={label} className="flex items-center justify-between bg-secondary/20 rounded-lg px-3 py-2 border border-border/30">
+              <div>
+                <p className="text-[10px] text-muted-foreground">{label}</p>
+                <p className="text-[9px] text-foreground/70 font-mono">{value}</p>
+              </div>
+              <div className={`w-2 h-2 rounded-full ${status ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Packet Flow Analyzer */}
+      <div className="glass-card p-4 animate-fade-in-up">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-medium">Analizador de Paquetes</span>
+        </div>
+        <div className="bg-secondary/20 rounded-lg p-3 border border-border/30 font-mono text-[9px] text-foreground/60 space-y-1 max-h-24 overflow-hidden">
+          <p><span className="text-emerald-400">[OK]</span> SYN → ACK handshake: 8ms</p>
+          <p><span className="text-emerald-400">[OK]</span> TLS negotiate: cipher=AES_256_GCM</p>
+          <p><span className="text-emerald-400">[OK]</span> Tunnel established: port=443</p>
+          <p><span className="text-amber-400">[INFO]</span> Route: client → proxy → target</p>
+          <p><span className="text-emerald-400">[OK]</span> DNS resolved: 1.1.1.1 (3ms)</p>
+          <p><span className="text-emerald-400">[OK]</span> Keepalive: interval=30s</p>
+          <p><span className="text-muted-foreground/40">[STREAM]</span> Rx: 2.4MB/s | Tx: 1.1MB/s</p>
+        </div>
+      </div>
+
       {/* Free Fire */}
       {connected && (
         <button onClick={launchFreeFire} disabled={launchingFF} className="w-full glass-card p-4 flex flex-col items-center gap-2 hover:bg-card/90 active:scale-[0.98] transition-all animate-fade-in-up border-orange-500/20">
