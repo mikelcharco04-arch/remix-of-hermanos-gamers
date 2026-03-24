@@ -368,10 +368,13 @@ const Admin = () => {
                 <p className="text-[10px] text-muted-foreground/60">Genera keys desde la pestaña "Generar"</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-0.5 scrollbar-thin">
-                {(["1 día", "7 días", "30 días"] as const).map(dur => {
+              <div className="space-y-5 max-h-[65vh] overflow-y-auto pr-0.5 scrollbar-thin">
+                {([
+                  { dur: "1 día", accent: "emerald", label: "FILA 1 — KEYS DE 1 DÍA" },
+                  { dur: "7 días", accent: "blue", label: "FILA 2 — KEYS DE 7 DÍAS" },
+                  { dur: "30 días", accent: "purple", label: "FILA 3 — KEYS DE 30 DÍAS" },
+                ] as const).map(({ dur, accent, label }) => {
                   const grouped = keys.filter(k => k.duration === dur);
-                  if (grouped.length === 0) return null;
                   const unusedKeys = grouped.filter(k => k.status === "Activa");
                   const copyId = `all-${dur}`;
                   const handleCopyAll = () => {
@@ -380,17 +383,24 @@ const Admin = () => {
                     setCopiedKey(copyId);
                     setTimeout(() => setCopiedKey(null), 2000);
                   };
+                  const accentColors: Record<string, { border: string; bg: string; text: string; headerBg: string }> = {
+                    emerald: { border: "border-emerald-500/30", bg: "bg-emerald-500/5", text: "text-emerald-400", headerBg: "bg-emerald-500/10" },
+                    blue: { border: "border-blue-500/30", bg: "bg-blue-500/5", text: "text-blue-400", headerBg: "bg-blue-500/10" },
+                    purple: { border: "border-purple-500/30", bg: "bg-purple-500/5", text: "text-purple-400", headerBg: "bg-purple-500/10" },
+                  };
+                  const ac = accentColors[accent];
                   return (
-                    <div key={dur} className="space-y-2">
-                      <div className="flex items-center justify-between px-1">
+                    <div key={dur} className={`rounded-xl border ${ac.border} ${ac.bg} overflow-hidden`}>
+                      {/* Section Header */}
+                      <div className={`${ac.headerBg} px-4 py-3 flex items-center justify-between border-b ${ac.border}`}>
                         <div className="flex items-center gap-2">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-xs font-mono font-semibold text-foreground uppercase tracking-wider">{dur}</span>
+                          <Clock className={`w-4 h-4 ${ac.text}`} />
+                          <span className={`text-[11px] font-mono font-bold ${ac.text} tracking-wider`}>{label}</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-secondary/60 text-muted-foreground font-mono border border-border/40">
                             {grouped.length}
                           </span>
                           {unusedKeys.length > 0 && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 font-mono border border-emerald-400/20">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${ac.bg} ${ac.text} font-mono border ${ac.border}`}>
                               {unusedKeys.length} libres
                             </span>
                           )}
@@ -401,7 +411,7 @@ const Admin = () => {
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-medium transition-all active:scale-95 border ${
                               copiedKey === copyId
                                 ? "bg-emerald-500/20 text-emerald-400 border-emerald-400/30"
-                                : "bg-secondary/50 text-muted-foreground border-border hover:border-ring hover:text-foreground"
+                                : `bg-secondary/50 text-muted-foreground border-border hover:border-ring hover:text-foreground`
                             }`}
                           >
                             {copiedKey === copyId ? <><Check className="w-3 h-3" /> Copiadas</> : <><Copy className="w-3 h-3" /> Copiar libres</>}
@@ -409,8 +419,13 @@ const Admin = () => {
                         )}
                       </div>
 
-                      <div className="space-y-2">
-                        {grouped.map((k, i) => (
+                      {/* Keys List */}
+                      <div className="p-3 space-y-2">
+                        {grouped.length === 0 ? (
+                          <div className="text-center py-6">
+                            <p className="text-[10px] text-muted-foreground/50 font-mono">Sin keys de {dur}</p>
+                          </div>
+                        ) : grouped.map((k, i) => (
                           <div key={k.key} className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: `${0.03 * i}s` }}>
                             <div className={`h-0.5 w-full ${k.status === "Activa" ? "bg-emerald-500" : k.status === "Usada" ? "bg-amber-500" : k.status === "Bloqueada" ? "bg-red-500" : "bg-neutral-600"}`} />
                             <div className="p-3 space-y-2">
@@ -434,7 +449,8 @@ const Admin = () => {
                                 <p className="text-[11px] font-mono text-foreground tracking-wide break-all">{k.key}</p>
                               </div>
                               <div className="flex gap-2 text-[9px] font-mono text-muted-foreground/70">
-                                <span>Creada: {new Date(k.createdAt).toLocaleDateString()}</span>
+                                <span>{k.duration}</span>
+                                <span>• {new Date(k.createdAt).toLocaleDateString()}</span>
                                 {k.usedBy && <span>• {k.usedBy}</span>}
                                 {k.expiresAt && <span>• {getTimeRemaining(k.expiresAt)}</span>}
                               </div>
@@ -452,11 +468,11 @@ const Admin = () => {
                   if (otherKeys.length === 0) return null;
                   const unusedOther = otherKeys.filter(k => k.status === "Activa");
                   return (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between px-1">
+                    <div className="rounded-xl border border-border/30 bg-secondary/5 overflow-hidden">
+                      <div className="bg-secondary/10 px-4 py-3 flex items-center justify-between border-b border-border/30">
                         <div className="flex items-center gap-2">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-xs font-mono font-semibold text-foreground uppercase tracking-wider">Otras</span>
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-[11px] font-mono font-bold text-muted-foreground tracking-wider">OTRAS DURACIONES</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-secondary/60 text-muted-foreground font-mono border border-border/40">{otherKeys.length}</span>
                         </div>
                         {unusedOther.length > 0 && (
@@ -468,28 +484,30 @@ const Admin = () => {
                           </button>
                         )}
                       </div>
-                      {otherKeys.map((k, i) => (
-                        <div key={k.key} className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: `${0.03 * i}s` }}>
-                          <div className={`h-0.5 w-full ${k.status === "Activa" ? "bg-emerald-500" : k.status === "Usada" ? "bg-amber-500" : k.status === "Bloqueada" ? "bg-red-500" : "bg-neutral-600"}`} />
-                          <div className="p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-medium ${statusColor(k.status)}`}>{statusIcon(k.status)} {k.status}</span>
-                              <div className="flex items-center gap-0.5">
-                                <button onClick={() => handleCopy(k.key)} className="p-1 rounded-lg hover:bg-secondary/80 transition-colors active:scale-95">
-                                  {copiedKey === k.key ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-                                </button>
-                                <button onClick={() => handleDelete(k.key)} className="p-1 rounded-lg hover:bg-destructive/20 transition-colors active:scale-95">
-                                  <Trash2 className="w-3 h-3 text-destructive" />
-                                </button>
+                      <div className="p-3 space-y-2">
+                        {otherKeys.map((k, i) => (
+                          <div key={k.key} className="glass-card overflow-hidden animate-fade-in-up" style={{ animationDelay: `${0.03 * i}s` }}>
+                            <div className={`h-0.5 w-full ${k.status === "Activa" ? "bg-emerald-500" : k.status === "Usada" ? "bg-amber-500" : k.status === "Bloqueada" ? "bg-red-500" : "bg-neutral-600"}`} />
+                            <div className="p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-medium ${statusColor(k.status)}`}>{statusIcon(k.status)} {k.status}</span>
+                                <div className="flex items-center gap-0.5">
+                                  <button onClick={() => handleCopy(k.key)} className="p-1 rounded-lg hover:bg-secondary/80 transition-colors active:scale-95">
+                                    {copiedKey === k.key ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                                  </button>
+                                  <button onClick={() => handleDelete(k.key)} className="p-1 rounded-lg hover:bg-destructive/20 transition-colors active:scale-95">
+                                    <Trash2 className="w-3 h-3 text-destructive" />
+                                  </button>
+                                </div>
                               </div>
+                              <div className="bg-secondary/30 rounded-lg px-2.5 py-2 border border-border/50">
+                                <p className="text-[11px] font-mono text-foreground tracking-wide break-all">{k.key}</p>
+                              </div>
+                              <p className="text-[9px] font-mono text-muted-foreground/70">{k.duration}</p>
                             </div>
-                            <div className="bg-secondary/30 rounded-lg px-2.5 py-2 border border-border/50">
-                              <p className="text-[11px] font-mono text-foreground tracking-wide break-all">{k.key}</p>
-                            </div>
-                            <p className="text-[9px] font-mono text-muted-foreground/70">{k.duration}</p>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}
