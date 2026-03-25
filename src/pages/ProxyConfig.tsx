@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isUserBlocked } from "@/lib/keys";
+import defaultAvatar from "@/assets/default-avatar.gif";
 import {
   Wifi, Globe, Signal, Clock, MapPin, Radio, Server,
   Lock, User, KeyRound, Power, LogOut, Gamepad2, Loader2,
@@ -198,9 +199,12 @@ const ProxyConfig = () => {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between animate-fade-in-up">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Configurar Proxy</h1>
-          <p className="text-xs text-muted-foreground">Hola, {session.name}</p>
+        <div className="flex items-center gap-3">
+          <img src={defaultAvatar} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-border object-cover" />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Configurar Proxy</h1>
+            <p className="text-xs text-muted-foreground">Hola, {session.name}</p>
+          </div>
         </div>
         <button onClick={handleLogout} className="p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors active:scale-95">
           <LogOut className="w-4 h-4 text-muted-foreground" />
@@ -685,6 +689,9 @@ const ProxyConfig = () => {
       title: "Perfil",
       content: (
         <div className="space-y-3">
+          <div className="flex justify-center">
+            <img src={defaultAvatar} alt="Avatar" className="w-20 h-20 rounded-full border-2 border-border object-cover" />
+          </div>
           <div className="bg-secondary/20 rounded-lg px-3 py-2.5 border border-border/30">
             <p className="text-[9px] text-muted-foreground/70 uppercase tracking-wider mb-0.5">Nombre</p>
             <p className="text-sm text-foreground font-medium">{session.name}</p>
