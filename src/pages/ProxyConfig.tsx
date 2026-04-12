@@ -68,17 +68,67 @@ const ProxyConfig = () => {
   const [expandedServer, setExpandedServer] = useState<number | null>(null);
   const [settingsSection, setSettingsSection] = useState<string | null>(null);
 
-  // Game toggles
-  const [noRecoil, setNoRecoil] = useState(false);
-  const [autoAim, setAutoAim] = useState(false);
-  const [fovEnabled, setFovEnabled] = useState(false);
-  const [fovSize, setFovSize] = useState(120);
-  const [speedHack, setSpeedHack] = useState(false);
-  const [wallHack, setWallHack] = useState(false);
+  // Game toggles - persisted in localStorage
+  const loadToggle = (key: string, def: boolean) => {
+    const v = localStorage.getItem(`proxy_toggle_${key}`);
+    return v !== null ? v === "true" : def;
+  };
+  const loadSlider = (key: string, def: number) => {
+    const v = localStorage.getItem(`proxy_slider_${key}`);
+    return v !== null ? Number(v) : def;
+  };
+
+  const [noRecoil, setNoRecoilRaw] = useState(() => loadToggle("noRecoil", false));
+  const [autoAim, setAutoAimRaw] = useState(() => loadToggle("autoAim", false));
+  const [fovEnabled, setFovEnabledRaw] = useState(() => loadToggle("fov", false));
+  const [fovSize, setFovSizeRaw] = useState(() => loadSlider("fovSize", 120));
+  const [speedHack, setSpeedHackRaw] = useState(() => loadToggle("speedHack", false));
+  const [wallHack, setWallHackRaw] = useState(() => loadToggle("wallHack", false));
   // Performance sliders
-  const [aimSmooth, setAimSmooth] = useState(50);
-  const [fireRate, setFireRate] = useState(30);
-  const [sensitivity, setSensitivity] = useState(60);
+  const [aimSmooth, setAimSmoothRaw] = useState(() => loadSlider("aimSmooth", 50));
+  const [fireRate, setFireRateRaw] = useState(() => loadSlider("fireRate", 30));
+  const [sensitivity, setSensitivityRaw] = useState(() => loadSlider("sensitivity", 60));
+
+  // Server tab modules - persisted
+  const [memoryPatcher, setMemoryPatcherRaw] = useState(() => loadToggle("memoryPatcher", false));
+  const [antiBan, setAntiBanRaw] = useState(() => loadToggle("antiBan", false));
+  const [kernelBypass, setKernelBypassRaw] = useState(() => loadToggle("kernelBypass", false));
+  const [rootCloak, setRootCloakRaw] = useState(() => loadToggle("rootCloak", false));
+  const [packetSpoof, setPacketSpoofRaw] = useState(() => loadToggle("packetSpoof", false));
+  const [dexInjector, setDexInjectorRaw] = useState(() => loadToggle("dexInjector", false));
+  const [sslPinning, setSslPinningRaw] = useState(() => loadToggle("sslPinning", false));
+  const [hwIdSpoof, setHwIdSpoofRaw] = useState(() => loadToggle("hwIdSpoof", false));
+  const [procHider, setProcHiderRaw] = useState(() => loadToggle("procHider", false));
+  // Server sliders - persisted
+  const [heapAlloc, setHeapAllocRaw] = useState(() => loadSlider("heapAlloc", 40));
+  const [threadPriority, setThreadPriorityRaw] = useState(() => loadSlider("threadPriority", 50));
+  const [injectionDelay, setInjectionDelayRaw] = useState(() => loadSlider("injectionDelay", 20));
+
+  // Wrapper setters that persist
+  const persistToggle = (key: string, setter: (v: boolean) => void) => (v: boolean) => { localStorage.setItem(`proxy_toggle_${key}`, String(v)); setter(v); };
+  const persistSlider = (key: string, setter: (v: number) => void) => (v: number) => { localStorage.setItem(`proxy_slider_${key}`, String(v)); setter(v); };
+
+  const setNoRecoil = persistToggle("noRecoil", setNoRecoilRaw);
+  const setAutoAim = persistToggle("autoAim", setAutoAimRaw);
+  const setFovEnabled = persistToggle("fov", setFovEnabledRaw);
+  const setFovSize = persistSlider("fovSize", setFovSizeRaw);
+  const setSpeedHack = persistToggle("speedHack", setSpeedHackRaw);
+  const setWallHack = persistToggle("wallHack", setWallHackRaw);
+  const setAimSmooth = persistSlider("aimSmooth", setAimSmoothRaw);
+  const setFireRate = persistSlider("fireRate", setFireRateRaw);
+  const setSensitivity = persistSlider("sensitivity", setSensitivityRaw);
+  const setMemoryPatcher = persistToggle("memoryPatcher", setMemoryPatcherRaw);
+  const setAntiBan = persistToggle("antiBan", setAntiBanRaw);
+  const setKernelBypass = persistToggle("kernelBypass", setKernelBypassRaw);
+  const setRootCloak = persistToggle("rootCloak", setRootCloakRaw);
+  const setPacketSpoof = persistToggle("packetSpoof", setPacketSpoofRaw);
+  const setDexInjector = persistToggle("dexInjector", setDexInjectorRaw);
+  const setSslPinning = persistToggle("sslPinning", setSslPinningRaw);
+  const setHwIdSpoof = persistToggle("hwIdSpoof", setHwIdSpoofRaw);
+  const setProcHider = persistToggle("procHider", setProcHiderRaw);
+  const setHeapAlloc = persistSlider("heapAlloc", setHeapAllocRaw);
+  const setThreadPriority = persistSlider("threadPriority", setThreadPriorityRaw);
+  const setInjectionDelay = persistSlider("injectionDelay", setInjectionDelayRaw);
 
   useEffect(() => {
     const checkSession = async () => {
