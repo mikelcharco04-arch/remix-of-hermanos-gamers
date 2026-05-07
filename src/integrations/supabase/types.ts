@@ -46,67 +46,58 @@ export type Database = {
       }
       payment_orders: {
         Row: {
+          ai_validation: Json | null
+          alias: string
           amount: number
           assigned_key: string | null
-          binance_order_id: string | null
-          checkout_url: string | null
           created_at: string
-          currency: string
-          deeplink: string | null
           duration: string
           email: string | null
           id: string
-          key_type: string
-          merchant_trade_no: string
-          paid_at: string | null
-          plan_id: string
-          plan_label: string
-          prepay_id: string | null
-          qr_url: string | null
-          raw_webhook: Json | null
+          payment_id: string
+          plan: string
+          receipt_url: string | null
+          rejection_reason: string | null
           status: string
+          telegram_message_id: number | null
+          tracking_token: string
+          updated_at: string
         }
         Insert: {
+          ai_validation?: Json | null
+          alias: string
           amount: number
           assigned_key?: string | null
-          binance_order_id?: string | null
-          checkout_url?: string | null
           created_at?: string
-          currency?: string
-          deeplink?: string | null
           duration: string
           email?: string | null
           id?: string
-          key_type: string
-          merchant_trade_no: string
-          paid_at?: string | null
-          plan_id: string
-          plan_label: string
-          prepay_id?: string | null
-          qr_url?: string | null
-          raw_webhook?: Json | null
+          payment_id: string
+          plan: string
+          receipt_url?: string | null
+          rejection_reason?: string | null
           status?: string
+          telegram_message_id?: number | null
+          tracking_token: string
+          updated_at?: string
         }
         Update: {
+          ai_validation?: Json | null
+          alias?: string
           amount?: number
           assigned_key?: string | null
-          binance_order_id?: string | null
-          checkout_url?: string | null
           created_at?: string
-          currency?: string
-          deeplink?: string | null
           duration?: string
           email?: string | null
           id?: string
-          key_type?: string
-          merchant_trade_no?: string
-          paid_at?: string | null
-          plan_id?: string
-          plan_label?: string
-          prepay_id?: string | null
-          qr_url?: string | null
-          raw_webhook?: Json | null
+          payment_id?: string
+          plan?: string
+          receipt_url?: string | null
+          rejection_reason?: string | null
           status?: string
+          telegram_message_id?: number | null
+          tracking_token?: string
+          updated_at?: string
         }
         Relationships: []
       }
