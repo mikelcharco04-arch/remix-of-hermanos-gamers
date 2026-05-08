@@ -5,10 +5,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLANS: Record<string, { duration: string; amount: number }> = {
-  day1: { duration: "1 día", amount: 4 },
-  day7: { duration: "7 días", amount: 7 },
-  day30: { duration: "30 días", amount: 15 },
+const PLANS_PAYPAL: Record<string, { duration: string; amount: number; display: string }> = {
+  day1: { duration: "1 día", amount: 4, display: "$4 USD" },
+  day7: { duration: "7 días", amount: 7, display: "$7 USD" },
+  day30: { duration: "30 días", amount: 15, display: "$15 USD" },
+};
+const PLANS_DIAMONDS: Record<string, { duration: string; amount: number; display: string }> = {
+  day1: { duration: "1 día", amount: 500, display: "500 Diamantes" },
+  day7: { duration: "7 días", amount: 800, display: "800 Diamantes" },
+  day30: { duration: "30 días", amount: 1500, display: "1500 Diamantes" },
 };
 
 function rand(len: number) {
@@ -21,8 +26,10 @@ function rand(len: number) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { plan, alias, email } = await req.json();
-    const p = PLANS[plan];
+    const { plan, alias, email, payment_method } = await req.json();
+    const method = payment_method === "diamonds" ? "diamonds" : "paypal";
+    const table = method === "diamonds" ? PLANS_DIAMONDS : PLANS_PAYPAL;
+    const p = table[plan];
     if (!p) throw new Error("Plan inválido");
     if (!alias || typeof alias !== "string" || alias.trim().length < 2) throw new Error("Alias requerido");
 
@@ -42,17 +49,32 @@ Deno.serve(async (req) => {
       plan,
       duration: p.duration,
       amount: p.amount,
+      amount_display: p.display,
+      payment_method: method,
       status: "AWAITING_RECEIPT",
     }).select().single();
 
     if (error) throw error;
 
+    await supabase.from("payment_logs").insert({
+      payment_id, event: "order_created",
+      detail: { plan, method, amount: p.amount, alias: data.alias },
+    });
+
     return new Response(JSON.stringify({
       payment_id: data.payment_id,
       tracking_token: data.tracking_token,
       amount: data.amount,
+      amount_display: p.display,
       duration: data.duration,
-      paypal_url: `https://www.paypal.me/ModifaxffLopez/${data.amount}`,
+      payment_method: method,
+      paypal_url: method === "paypal" ? `https://www.paypal.me/ModifaxffLopez/${data.amount}` : null,
+      diamonds_info: method === "diamonds" ? {
+        ff_id: "6929427211",
+        account: "suessa 7p",
+        region: "Estados Unidos",
+        amount: p.amount,
+      } : null,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
