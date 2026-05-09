@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import VideoBackground from "@/components/VideoBackground";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Shield, KeyRound, User, Lock, Fingerprint, Wifi } from "lucide-react";
+import { Shield, KeyRound, User, Lock, Fingerprint } from "lucide-react";
 import { validateKey, activateKey, registerActiveUser } from "@/lib/keys";
-import defaultAvatar from "@/assets/default-avatar.gif";
+import defaultAvatar from "@/assets/profile-avatar.jpeg";
 
 const Login = () => {
   const [name, setName] = useState("");
@@ -70,10 +70,7 @@ const Login = () => {
         <div className="flex flex-col items-center mb-6">
           <div className="relative mb-3">
             <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border shadow-[0_0_40px_rgba(255,255,255,0.06)]">
-              <img src={defaultAvatar} alt="Profile" className="w-full h-full object-cover scale-110" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-background flex items-center justify-center">
-              <Wifi className="w-3.5 h-3.5 text-background" />
+              <img src={defaultAvatar} alt="Profile" className="w-full h-full object-cover" />
             </div>
           </div>
           <div className="flex items-center gap-1.5 mb-1">
