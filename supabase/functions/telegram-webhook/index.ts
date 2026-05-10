@@ -21,6 +21,27 @@ const reply = (chat_id: number, text: string) => tg("sendMessage", { chat_id, te
 const ack = (id: string, text = "OK") => tg("answerCallbackQuery", { callback_query_id: id, text });
 const editCaption = (chat_id: number, message_id: number, caption: string) =>
   tg("editMessageCaption", { chat_id, message_id, caption, parse_mode: "HTML" });
+const deleteMessage = (chat_id: number, message_id: number) =>
+  tg("deleteMessage", { chat_id, message_id });
+
+async function deleteReceipt(supabase: any, order: any) {
+  try {
+    if (order?.receipt_url) {
+      const marker = "/receipts/";
+      const idx = order.receipt_url.indexOf(marker);
+      if (idx >= 0) {
+        const path = decodeURIComponent(order.receipt_url.slice(idx + marker.length).split("?")[0]);
+        await supabase.storage.from("receipts").remove([path]);
+      }
+    }
+    await supabase.from("payment_orders").update({ receipt_url: null }).eq("id", order.id);
+    await supabase.from("payment_logs").insert({
+      payment_id: order.payment_id, event: "receipt_deleted", detail: { reason: "rejected" },
+    });
+  } catch (e) {
+    console.error("deleteReceipt error", e);
+  }
+}
 
 function genKey(): string {
   const c = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
