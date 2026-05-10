@@ -148,7 +148,9 @@ async function handleCommand(supabase: any, chat_id: number, text: string, admin
       if (!o) { await reply(chat_id, "No encontrado."); return; }
       await supabase.from("payment_orders").update({ status: "REJECTED", rejection_reason: reason }).eq("id", o.id);
       await supabase.from("payment_logs").insert({ payment_id: id, event: "rejected", detail: { reason } });
-      await reply(chat_id, `Rechazado <code>${id}</code>\nMotivo: ${reason}`);
+      await deleteReceipt(supabase, o);
+      if (o.telegram_message_id) { try { await deleteMessage(Number(adminId), Number(o.telegram_message_id)); } catch {} }
+      await reply(chat_id, `Rechazado <code>${id}</code>\nComprobante eliminado.\nMotivo: ${reason}`);
       return;
     }
     case "/cancelar": {
