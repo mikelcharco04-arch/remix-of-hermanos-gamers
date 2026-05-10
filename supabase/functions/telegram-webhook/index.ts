@@ -243,9 +243,9 @@ Deno.serve(async (req) => {
       await ack(cb.id, "Aprobado");
     } else if (action === "reject") {
       await supabase.from("payment_orders").update({ status: "REJECTED", rejection_reason: "Rechazado por administrador" }).eq("id", order.id);
-      await editCaption(chat_id, message_id,
-        `<b>RECHAZADO</b>\nID: <code>${order.payment_id}</code>\nUsuario: ${order.alias}`);
+      await deleteReceipt(supabase, order);
       await ack(cb.id, "Rechazado");
+      try { await deleteMessage(chat_id, message_id); } catch {}
     } else if (action === "info") {
       await ack(cb.id,
         `${order.alias} · ${order.duration} · ${order.amount_display || order.amount} · ${order.email || "sin email"}`);
